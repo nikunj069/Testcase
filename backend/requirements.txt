@@ -22,7 +22,7 @@ torch-geometric==2.8.0.post1
 networkx==3.6.1
 
 # Explainability
-shap==0.52.0
+shap<=0.51.0
 
 # ML Utilities
 scikit-learn==1.9.0
