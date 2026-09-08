@@ -331,8 +331,10 @@ def run_daemon(port=5055):
             self.send_header("Access-Control-Allow-Origin", "*")
             self.end_headers()
 
-    server = HTTPServer(("127.0.0.1", port), FaissHandler)
-    print(f"[FAISS Daemon] Running on http://127.0.0.1:{port} (vectors={engine.index_flat.ntotal})", file=sys.stderr)
+    import os
+    host = os.getenv("HOST", "0.0.0.0")
+    server = HTTPServer((host, port), FaissHandler)
+    print(f"[FAISS Daemon] Running on http://{host}:{port} (vectors={engine.index_flat.ntotal})", file=sys.stderr)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

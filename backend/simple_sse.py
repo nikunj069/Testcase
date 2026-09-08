@@ -368,5 +368,9 @@ class SSEHandler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
 
 if __name__ == '__main__':
-    server = http.server.ThreadingHTTPServer(('127.0.0.1', 8000), SSEHandler)
+    import os
+    host = os.getenv('HOST', '0.0.0.0')
+    port = int(os.getenv('PORT', 8000))
+    server = http.server.ThreadingHTTPServer((host, port), SSEHandler)
+    print(f"[SSE Server] Listening on {host}:{port}")
     server.serve_forever()

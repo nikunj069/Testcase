@@ -9,6 +9,8 @@ services:
       - "80:3000"
     environment:
       - NODE_ENV=production
+      - HOSTNAME=0.0.0.0
+      - PORT=3000
       - NEXT_PUBLIC_API_URL=http://localhost:8000
     depends_on:
       - backend_api
