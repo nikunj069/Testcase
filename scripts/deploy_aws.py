@@ -79,14 +79,14 @@ def main():
         return
 
     # 3. Launch Instance
-    print("[*] Launching t2.micro EC2 Instance with encrypted 30GB EBS volume...")
+    print("[*] Launching t3.micro EC2 Instance with encrypted 30GB EBS volume...")
     ami_id = get_ubuntu_ami(region)
     try:
         instances = ec2_resource.create_instances(
             ImageId=ami_id,
             MinCount=1,
             MaxCount=1,
-            InstanceType='t2.micro',
+            InstanceType='t3.micro',
             KeyName=key_name,
             SecurityGroupIds=[sg_id],
             BlockDeviceMappings=[
