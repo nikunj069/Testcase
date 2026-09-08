@@ -39,7 +39,7 @@ async function queryFaissEngine(
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 1800);
     
-    const res = await fetch(`http://127.0.0.1:8000/api/search?${params.toString()}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/search?${params.toString()}`, {
       signal: controller.signal,
       headers: {
         "x-api-key": "testkey123"

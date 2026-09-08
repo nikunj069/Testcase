@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     // Fallback to local NLP if backend is unreachable
     let parsed: any;
     try {
-      const pyRes = await fetch("http://127.0.0.1:8000/api/parse_text", {
+      const pyRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/parse_text`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "80:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - backend_api
+    volumes:
+      - ./prisma/dev.db:/app/prisma/dev.db
+
+  backend_api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: python backend/simple_sse.py
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/darkint.db:/app/backend/darkint.db
+      - ./data:/app/data
+    environment:
+      - HOST=0.0.0.0
+
+  faiss_daemon:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: python backend/scripts/faiss_engine.py --daemon --port 5055 --host 0.0.0.0
+    ports:
+      - "5055:5055"
+    volumes:
+      - ./data:/app/data

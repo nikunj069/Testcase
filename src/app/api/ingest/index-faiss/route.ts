@@ -26,7 +26,7 @@ export async function POST(request: Request) {
 
         // 1. Send to live FAISS daemon
         try {
-          const faissRes = await fetch("http://127.0.0.1:5055/index", {
+          const faissRes = await fetch(`${process.env.NEXT_PUBLIC_FAISS_URL || 'http://127.0.0.1:5055'}/index`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)

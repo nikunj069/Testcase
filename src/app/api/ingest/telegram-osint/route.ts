@@ -7,19 +7,19 @@ export async function GET(req: Request) {
     const action = searchParams.get("action") || "status";
 
     if (action === "sources") {
-      const resp = await fetch("http://127.0.0.1:8000/api/telegram_osint/sources");
+      const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/telegram_osint/sources`);
       const data = await resp.json();
       return NextResponse.json(data);
     }
 
     if (action === "keywords") {
-      const resp = await fetch("http://127.0.0.1:8000/api/telegram_osint/keywords");
+      const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/telegram_osint/keywords`);
       const data = await resp.json();
       return NextResponse.json(data);
     }
 
     if (action === "discovery") {
-      const resp = await fetch("http://127.0.0.1:8000/api/telegram_osint/discovery");
+      const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/telegram_osint/discovery`);
       const data = await resp.json();
       return NextResponse.json(data);
     }
@@ -42,7 +42,7 @@ export async function GET(req: Request) {
     }
 
     // Default: Fetch status from backend
-    const resp = await fetch("http://127.0.0.1:8000/api/telegram_osint/status");
+    const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/telegram_osint/status`);
     const statusData = await resp.json();
     return NextResponse.json(statusData);
   } catch (error: any) {
@@ -59,7 +59,7 @@ export async function POST(req: Request) {
     const { action = "command", command, source_id, mode = "MOCK", max_messages = 5, user_id = "admin", args = [], keywords, channel_username, status } = body;
 
     if (action === "discover") {
-      const resp = await fetch("http://127.0.0.1:8000/api/telegram_osint/discover", {
+      const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/telegram_osint/discover`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ keywords, mode }),
@@ -69,7 +69,7 @@ export async function POST(req: Request) {
     }
 
     if (action === "review") {
-      const resp = await fetch("http://127.0.0.1:8000/api/telegram_osint/review_source", {
+      const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/telegram_osint/review_source`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ channel_username, status }),
@@ -80,7 +80,7 @@ export async function POST(req: Request) {
 
     if (action === "collect") {
       const ignore_checkpoint = body.ignore_checkpoint || false;
-      const resp = await fetch("http://127.0.0.1:8000/api/telegram_osint/collect", {
+      const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/telegram_osint/collect`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ source_id, mode, max_messages, ignore_checkpoint }),
@@ -91,7 +91,7 @@ export async function POST(req: Request) {
 
     if (action === "wallet_analyze") {
       const wallet = body.wallet || "";
-      const resp = await fetch("http://127.0.0.1:8000/api/financial/wallet-analyze", {
+      const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/financial/wallet-analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ wallet }),
@@ -101,7 +101,7 @@ export async function POST(req: Request) {
     }
 
     // Default: Execute bot command (/status, /mock, /discover, /sources, etc.)
-    const resp = await fetch("http://127.0.0.1:8000/api/telegram_osint/command", {
+    const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/telegram_osint/command`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

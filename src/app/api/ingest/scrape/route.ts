@@ -737,7 +737,7 @@ Invite URL: ${inviteUrl} · Status: VERIFIED ACTIVE GROUP INVITE
 
         // 1. Try Python Semantic & Anti-Bot Service (Crawl4AI + Camoufox Engine)
         try {
-          const pyRes = await fetch("http://127.0.0.1:8000/api/ingest/semantic-scrape", {
+          const pyRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/ingest/semantic-scrape`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ url: cleanTarget, extract_targeted: true }),
@@ -834,7 +834,7 @@ Invite URL: ${inviteUrl} · Status: VERIFIED ACTIVE GROUP INVITE
       
       // Enrich with Python FastAPI NLP & Chain Tracker
       try {
-        const pyRes = await fetch("http://127.0.0.1:8000/api/parse_text", {
+        const pyRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/parse_text`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text: post.text })
@@ -881,7 +881,7 @@ Invite URL: ${inviteUrl} · Status: VERIFIED ACTIVE GROUP INVITE
           const docId = `SCRAPE-${post.id || Math.random().toString(36).substring(2, 9)}`;
           const docLabel = `${post.sender || post.title || post.channel}: ${post.text.substring(0, 45)}...`;
           
-          const faissRes = await fetch("http://127.0.0.1:5055/index", {
+          const faissRes = await fetch(`${process.env.NEXT_PUBLIC_FAISS_URL || 'http://127.0.0.1:5055'}/index`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -1010,7 +1010,7 @@ Invite URL: ${inviteUrl} · Status: VERIFIED ACTIVE GROUP INVITE
 
       // 5. Publish to live ZeroMQ TCP bus
       try {
-        await fetch("http://127.0.0.1:8000/api/zmq_publish", {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/zmq_publish`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
