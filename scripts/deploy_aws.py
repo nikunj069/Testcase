@@ -140,16 +140,60 @@ def main():
         return
 
     try:
-        commands = [
-            "echo '[*] Setting up 4GB Swap...' && sudo fallocate -l 4G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile && echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab",
-            "echo '[*] Installing Docker and Git...' && sudo apt-get update -y && sudo apt-get install -y docker.io docker-compose git",
+        commands_phase1 = [
+            "echo '[*] Setting up 4GB Swap file for t2.micro stability...' && if [ ! -f /swapfile ]; then sudo dd if=/dev/zero of=/swapfile bs=128M count=32 status=progress && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile && echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab; fi",
+            "echo '[*] Waiting for apt background locks...' && while sudo fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; do sleep 3; done",
+            "echo '[*] Installing Docker and Git...' && sudo DEBIAN_FRONTEND=noninteractive apt-get update -y && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y docker.io docker-compose git",
             "echo '[*] Starting Docker...' && sudo systemctl start docker && sudo systemctl enable docker && sudo usermod -aG docker ubuntu",
-            f"echo '[*] Cloning repository...' && rm -rf app && git clone {github_repo} app",
-            f"echo '[*] Configuring environment and launching Docker containers...' && cd app && printf 'NEXT_PUBLIC_API_URL=http://{public_ip}:8000\\nNEXT_PUBLIC_FAISS_URL=http://{public_ip}:5055\\n' > .env.production && sudo docker-compose up -d --build"
+            f"echo '[*] Cloning repository...' && rm -rf app && git clone {github_repo} app && mkdir -p app/prisma app/backend app/data"
         ]
         
-        for command in commands:
-            print(f"\n> Running remote command: {command[:60]}...")
+        for command in commands_phase1:
+            print(f"\n> Running: {command[:65]}...")
+            stdin, stdout, stderr = ssh.exec_command(command)
+            while True:
+                line = stdout.readline()
+                if not line:
+                    break
+                print(line.rstrip())
+            exit_status = stdout.channel.recv_exit_status()
+            if exit_status != 0:
+                print(f"Warning: Command returned status {exit_status}")
+                err_output = stderr.read().decode()
+                if err_output:
+                    print(f"STDERR: {err_output}")
+
+        # SFTP Upload local database files if present
+        print("\n[*] Uploading local SQLite databases to EC2 via SFTP...")
+        try:
+            sftp = ssh.open_sftp()
+            workspace_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            prisma_db = os.path.join(workspace_root, 'prisma', 'dev.db')
+            darkint_db = os.path.join(workspace_root, 'backend', 'darkint.db')
+            
+            if os.path.exists(prisma_db):
+                print("    Uploading prisma/dev.db...")
+                sftp.put(prisma_db, '/home/ubuntu/app/prisma/dev.db')
+                print("    prisma/dev.db uploaded successfully.")
+            
+            if os.path.exists(darkint_db):
+                print("    Uploading backend/darkint.db...")
+                sftp.put(darkint_db, '/home/ubuntu/app/backend/darkint.db')
+                print("    backend/darkint.db uploaded successfully.")
+            
+            sftp.close()
+        except Exception as sftp_err:
+            print(f"    SFTP upload warning: {sftp_err}. Touching placeholder database files instead.")
+            ssh.exec_command("touch /home/ubuntu/app/prisma/dev.db /home/ubuntu/app/backend/darkint.db")
+
+        commands_phase2 = [
+            f"echo '[*] Writing environment variables...' && cd app && printf 'NEXT_PUBLIC_API_URL=http://{public_ip}:8000\\nNEXT_PUBLIC_FAISS_URL=http://{public_ip}:5055\\n' > .env && cp .env .env.production",
+            "echo '[*] Building and starting Docker containers (this may take 3-5 minutes)...' && cd app && (sudo docker compose up -d --build || sudo docker-compose up -d --build)",
+            "echo '[*] Checking running containers...' && sudo docker ps"
+        ]
+
+        for command in commands_phase2:
+            print(f"\n> Running: {command[:65]}...")
             stdin, stdout, stderr = ssh.exec_command(command)
             while True:
                 line = stdout.readline()
@@ -163,10 +207,12 @@ def main():
                 if err_output:
                     print(f"STDERR: {err_output}")
         
-        print("\n========================================")
-        print("DEPLOYMENT COMPLETE!")
-        print(f"Access your pineSAW application at: http://{public_ip}")
-        print("========================================")
+        print("\n=======================================================")
+        print("🎉 AWS DEPLOYMENT COMPLETE!")
+        print(f"🌐 Frontend Dashboard:  http://{public_ip}")
+        print(f"⚡ Backend API (SSE):   http://{public_ip}:8000")
+        print(f"🧠 FAISS Vector Daemon: http://{public_ip}:5055")
+        print("=======================================================")
         
     except Exception as e:
         print(f"SSH Deployment failed: {e}")
